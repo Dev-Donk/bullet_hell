@@ -19,6 +19,12 @@ config/icon="res://icon.svg"
 
 ControlHandler="*res://handlers/controlHandler.gd"
 
+[display]
+
+window/size/viewport_width=2056
+window/size/viewport_height=1024
+window/size/resizable=false
+
 [input]
 
 ui_left={
