@@ -17,12 +17,10 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-ControlHandler="*res://handlers/controlHandler.gd"
+ControlHandler="*res://controlHandler.gd"
 
 [display]
 
-window/size/viewport_width=2056
-window/size/viewport_height=1024
 window/size/resizable=false
 
 [input]

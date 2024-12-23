@@ -3,6 +3,8 @@ extends Area2D
 var speed: float = 750
 var damage: float = 0
 
+# TODO: Despawn bullet when off screen
+
 func _physics_process(delta):
 	position += transform.x * speed * delta
 
