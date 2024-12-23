@@ -7,10 +7,17 @@ size = Vector2(10, 10)
 
 [sub_resource type="CanvasTexture" id="CanvasTexture_mgc27"]
 
-[node name="BulletSimple" type="Area2D"]
+[node name="BulletSimple" type="CharacterBody2D"]
+slide_on_ceiling = false
+floor_block_on_wall = false
 script = ExtResource("1_j0y0e")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="Body" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1j1kd")
+
+[node name="CollisionBody" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionBody"]
 shape = SubResource("RectangleShape2D_1j1kd")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

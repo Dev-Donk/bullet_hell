@@ -7,6 +7,9 @@ signal shooting
 var controller = (ControlHandler)
 var screen_size: Vector2 = Vector2.ZERO
 
+var _base_health: int = 3
+var _curr_health: int = _base_health
+
 const DEFAULT_WALK_SPEED: float = 250.0
 const MIN_WALK_SPEED: float = 50.0
 const MAX_WALK_SPEED: float = 500.0
@@ -29,7 +32,7 @@ const MIN_RECOIL_INTENSITY: float = 0.5
 const MAX_RECOIL_INTENSITY: float = 10.0
 
 var _bullet_main: PackedScene = load("res://bullet_simple.tscn")
-const SHOOT_MAIN_COOL_DOWN: float = 3.025
+const SHOOT_MAIN_COOL_DOWN: float = 1.5
 var _can_shoot_main: bool = true
 var _shoot_main_cool_down_modifier: float = 0.0
 var RECOIL_INTENSITY_MAIN: float = 2
@@ -71,13 +74,13 @@ func _process(delta: float) -> void:
 			_can_dash = false
 			is_dashing = true
 			await(get_tree().create_timer(0.05).timeout)
-			print("DASH COOLING DOWN...")
+			# print("DASH COOLING DOWN...")
 			is_dashing = false
 			dash()
 			_check_if_idle()
 			
 			await(get_tree().create_timer(get_net_diff(DASH_COOL_DOWN, _dash_cool_down_modifier, MIN_COOL_DOWN, MAX_COOL_DOWN)).timeout)
-			print("DASH READY!")
+			# print("DASH READY!")
 			_can_dash = true
 	
 	match state_attack:
@@ -88,7 +91,7 @@ func _process(delta: float) -> void:
 				state_attack = ATTACK_STATES.STATE_ATTACK_SECONDARY
 		
 		ATTACK_STATES.STATE_ATTACK_MAIN: # Could you make a method out of this???
-			print("ATTACK FROM MAIN")
+			# print("ATTACK FROM MAIN")
 			
 			_can_shoot_main = false
 			recoil(RECOIL_INTENSITY_MAIN, _recoil_intensity_main_modifier)
@@ -99,7 +102,7 @@ func _process(delta: float) -> void:
 			_can_shoot_main = true
 		
 		ATTACK_STATES.STATE_ATTACK_SECONDARY:
-			print("ATTACK FROM SECONDARY")
+			# print("ATTACK FROM SECONDARY")
 			
 			_can_shoot_secondary = false
 			recoil(RECOIL_INTENSITY_SECONDARY, _recoil_intensity_secondary_modifier)
@@ -110,7 +113,7 @@ func _process(delta: float) -> void:
 			_can_shoot_secondary = true
 
 func _physics_process(delta: float) -> void:
-	move()
+	set_velocity_and_rotation(delta)
 	move_and_slide()
 	
 	position.x = clamp(position.x, 0, screen_size.x) # clamp will limit a value between a range
@@ -119,9 +122,9 @@ func _physics_process(delta: float) -> void:
 func get_input_direction() -> Vector2:
 	return Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
-func move() -> void:
+func set_velocity_and_rotation(delta: float) -> void:
 	look_at(get_global_mouse_position())
-	velocity = velocity.lerp(get_input_direction() * get_net_walk_speed(), 0.05)
+	velocity = velocity.lerp(get_input_direction() * get_net_walk_speed(), 0.05) # Does it not need delta??? look into that at some point
 
 func dash() -> void:
 	emit_signal("dashing")

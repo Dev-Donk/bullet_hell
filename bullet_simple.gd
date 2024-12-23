@@ -1,12 +1,11 @@
-extends Area2D
+extends CharacterBody2D
 
 var speed: float = 750
 var damage: float = 0
 
-# TODO: Despawn bullet when off screen
-
 func _physics_process(delta):
-	position += transform.x * speed * delta
+	velocity = transform.x * speed
+	move_and_slide()
 
 func _on_Bullet_body_entered(body):
 	if body.is_in_group("mobs"):
@@ -15,3 +14,7 @@ func _on_Bullet_body_entered(body):
 	
 func set_damage(damage_in: float) -> void:
 	damage = damage_in
+
+func _on_visible_on_screen_notifier_2d_screen_exited():
+	print("BULLET GONE")
+	queue_free()
