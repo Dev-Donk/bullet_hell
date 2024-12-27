@@ -63,7 +63,7 @@ func _process(delta: float) -> void:
 				state_movement = MOVEMENT_STATES.STATE_IDLE
 			else:
 				# print("MOVING")
-				if Input.is_action_just_pressed("ui_accept") && _can_dash && !is_shooting:
+				if Input.is_action_just_pressed("ui_accept") && _can_dash:
 					state_movement = MOVEMENT_STATES.STATE_DASHING
 		
 		MOVEMENT_STATES.STATE_DASHING: # Could you make a method out of this???
@@ -77,27 +77,15 @@ func _process(delta: float) -> void:
 			if Input.is_action_just_pressed("attack_secondary") && _can_shoot_secondary && !is_dashing:
 				state_attack = ATTACK_STATES.STATE_ATTACK_SECONDARY
 		
-		ATTACK_STATES.STATE_ATTACK_MAIN: # Could you make a method out of this???
+		ATTACK_STATES.STATE_ATTACK_MAIN:
 			# print("ATTACK FROM MAIN")
-			
-			_can_shoot_main = false
-			_shoot(_bullet_main)
+			_shoot(_bullet_main, _can_shoot_main, SHOOT_MAIN_COOL_DOWN, _shoot_main_cool_down_modifier)
 			state_attack = ATTACK_STATES.STATE_ATTACK_NONE
-			
-			# await in _process might be bad process, it works for now. Look for potential solution at some point soon
-			await(get_tree().create_timer(get_net_diff(SHOOT_MAIN_COOL_DOWN, _shoot_main_cool_down_modifier, MIN_COOL_DOWN, MAX_COOL_DOWN)).timeout)
-			_can_shoot_main = true
 		
 		ATTACK_STATES.STATE_ATTACK_SECONDARY:
 			# print("ATTACK FROM SECONDARY")
-			
-			_can_shoot_secondary = false
-			_shoot(_bullet_secondary)
+			_shoot(_bullet_secondary, _can_shoot_secondary, SHOOT_SECONDARY_COOL_DOWN, _shoot_secondary_cool_down_modifier)
 			state_attack = ATTACK_STATES.STATE_ATTACK_NONE
-			
-			# await in _process might be bad process, it works for now. Look for potential solution at some point soon
-			await(get_tree().create_timer(get_net_diff(SHOOT_SECONDARY_COOL_DOWN, _shoot_secondary_cool_down_modifier, MIN_COOL_DOWN, MAX_COOL_DOWN)).timeout)
-			_can_shoot_secondary = true
 
 func _physics_process(delta: float) -> void:
 	set_velocity_and_rotation()
@@ -116,7 +104,7 @@ func set_velocity_and_rotation() -> void:
 
 func dash() -> bool:
 	
-	if _can_dash == true:
+	if _can_dash && !is_dashing:
 		
 		_can_dash = false
 		is_dashing = true
@@ -153,21 +141,30 @@ func get_net_diff(base_value: float, modifier_value: float, range_min: float, ra
 func get_net_walk_speed() -> float:
 	return get_net_sum(DEFAULT_WALK_SPEED, _walk_speed_modifier, MIN_WALK_SPEED, MAX_WALK_SPEED)
 
-func _shoot(bullet: PackedScene) -> bool:
+func _shoot(bullet: PackedScene, can_shoot: bool, cool_down: float, cool_down_modifier: float) -> bool:
 	if bullet != null:
-		var b = bullet.instantiate()
-		
-		is_shooting = true
-		emit_signal("shooting")
-		recoil(b.recoil, _recoil_dampen_modifier)
-		owner.add_child(b)
-		b.set_damage_amount(5)
-		b.transform = $Gun.global_transform
-		
-		is_shooting = false
-		return Action_States.ACTION_SUCCESS
+		if can_shoot && !is_shooting:
+			var b = bullet.instantiate()
+			
+			can_shoot = false
+			is_shooting = true
+			emit_signal("shooting")
+			
+			recoil(b.recoil, _recoil_dampen_modifier)
+			owner.add_child(b)
+			b.set_damage_amount(5)
+			b.transform = $Gun.global_transform
+			
+			is_shooting = false
+			await(get_tree().create_timer(get_net_diff(cool_down, cool_down_modifier, MIN_COOL_DOWN, MAX_COOL_DOWN)).timeout)
+			can_shoot = true
+			
+			return Action_States.ACTION_SUCCESS
+		else:
+			return Action_States.ACTION_FAIL
 	else:
-		return Action_States.ACTION_FAIL
+		printerr("MISSING BULLET.")
+		return Action_States.ACTION_ERROR
 	
 func _check_if_idle() -> void:
 	if velocity != Vector2.ZERO:

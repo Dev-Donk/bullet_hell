@@ -1,4 +1,3 @@
-extends Node
 class_name Control_Handler
 
 enum {UP_MOVE_KEY = KEY_W}
