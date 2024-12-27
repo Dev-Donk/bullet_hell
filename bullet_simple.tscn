@@ -2,24 +2,25 @@
 
 [ext_resource type="Script" path="res://bullet_simple.gd" id="1_j0y0e"]
 
+[sub_resource type="CanvasTexture" id="CanvasTexture_mgc27"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1j1kd"]
 size = Vector2(10, 10)
 
-[sub_resource type="CanvasTexture" id="CanvasTexture_mgc27"]
-
-[node name="BulletSimple" type="CharacterBody2D"]
-slide_on_ceiling = false
-floor_block_on_wall = false
+[node name="BulletSimple" type="Area2D" groups=["bullets"]]
+collision_layer = 2
 script = ExtResource("1_j0y0e")
-
-[node name="Body" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_1j1kd")
-
-[node name="CollisionBody" type="Area2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CollisionBody"]
-shape = SubResource("RectangleShape2D_1j1kd")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(10, 10)
 texture = SubResource("CanvasTexture_mgc27")
+
+[node name="Body" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1j1kd")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
+position = Vector2(0, 2.38419e-07)
+scale = Vector2(0.5, 0.5)
+
+[connection signal="body_entered" from="." to="." method="_on_Bullet_body_entered"]
+[connection signal="screen_exited" from="VisibleOnScreenNotifier2D" to="." method="_on_visible_on_screen_notifier_2d_screen_exited"]

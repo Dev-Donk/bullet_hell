@@ -23,6 +23,11 @@ ControlHandler="*res://controlHandler.gd"
 
 window/size/resizable=false
 
+[global_group]
+
+mobs=""
+bullets=""
+
 [input]
 
 ui_left={
