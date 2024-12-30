@@ -1,10 +1,14 @@
 extends CharacterBody2D
 
+# TODO: Move walking and possibly dashing to the mob script and make
+#		the player script a CHILD of the mob script. The player is a mob
+#		technically after all
+
 signal dashing
 signal hit
 signal shooting
+signal bullet_updated
 
-var controller = (ControlHandler)
 var screen_size: Vector2 = Vector2.ZERO
 
 var _base_health: int = 3
@@ -23,7 +27,7 @@ const MAX_COOL_DOWN: float = 120.0
 const DASH_SPEED: float = 5.0
 
 const DASH_COOL_DOWN: float = 4.0
-var is_dashing: bool = false # could this be a signals???
+var is_dashing: bool = false
 var _can_dash: bool = true
 @export var _dash_cool_down_modifier: float = 0.0
 
@@ -52,6 +56,10 @@ func _ready() -> void:
 	screen_size = get_viewport_rect().size
 
 func _process(delta: float) -> void:
+	# Something about this state machine is that it works for THIS project, player movement isn't
+	# that complex, neither is the game. For another project, one like Cubit, this might need to be
+	# reconsidered. This is your first FSM, don't beat yourself up!
+	
 	match state_movement:
 		MOVEMENT_STATES.STATE_IDLE:
 			if velocity != Vector2.ZERO:
@@ -125,10 +133,12 @@ func dash() -> bool:
 func recoil(intensity: float, intensity_modifier: float) -> void:
 	velocity = -(transform.x * get_net_walk_speed() * get_net_diff(intensity, intensity_modifier, 1, MAX_RECOIL_DAMPEN))
 
-func set_bullet_main(bullet_new: PackedScene) -> void:
-	_bullet_main = bullet_new
-func set_bullet_secondary(bullet_new: PackedScene) -> void:
-	_bullet_secondary = bullet_new
+func set_bullet(bullet_in: PackedScene, bullet_new: PackedScene) -> void:
+	var prev_bullet = bullet_in
+	bullet_in = bullet_new
+	
+	if bullet_in != prev_bullet:
+		emit_signal("bullet_updated", bullet_in)
 
 func get_net_sum(base_value: float, modifier_value: float, range_min: float, range_max: float) -> float:
 	var ret: float = base_value + (base_value * modifier_value)
@@ -155,9 +165,9 @@ func _shoot(bullet: PackedScene, can_shoot: bool, cool_down: float, cool_down_mo
 			b.set_damage_amount(5)
 			b.transform = $Gun.global_transform
 			
-			is_shooting = false
 			await(get_tree().create_timer(get_net_diff(cool_down, cool_down_modifier, MIN_COOL_DOWN, MAX_COOL_DOWN)).timeout)
 			can_shoot = true
+			is_shooting = false
 			
 			return Action_States.ACTION_SUCCESS
 		else:

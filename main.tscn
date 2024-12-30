@@ -1,14 +1,13 @@
 [gd_scene load_steps=4 format=3 uid="uid://c8exhyyowpo27"]
 
-[ext_resource type="PackedScene" uid="uid://djqyepp2jpldg" path="res://player.tscn" id="1_0sv87"]
-[ext_resource type="PackedScene" uid="uid://f8fejb7pi6yw" path="res://bullet_simple.tscn" id="2_6c3qt"]
-[ext_resource type="PackedScene" uid="uid://vv8xqxpgsh3s" path="res://mob_test.tscn" id="2_trrww"]
+[ext_resource type="PackedScene" uid="uid://djqyepp2jpldg" path="res://scenes/actors/player.tscn" id="1_0sv87"]
+[ext_resource type="PackedScene" uid="uid://f8fejb7pi6yw" path="res://scenes/actors/projectiles/bullet_simple.tscn" id="2_6c3qt"]
+[ext_resource type="PackedScene" uid="uid://vv8xqxpgsh3s" path="res://scenes/actors/mob_test.tscn" id="2_trrww"]
 
 [node name="Main" type="Node2D"]
 
 [node name="Player" parent="." instance=ExtResource("1_0sv87")]
 position = Vector2(574, 306)
-_recoil_dampen_modifier = 100.0
 _bullet_main = ExtResource("2_6c3qt")
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("2_trrww")]
