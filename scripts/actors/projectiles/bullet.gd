@@ -13,7 +13,6 @@ func _on_Bullet_body_entered(body):
 		body.damage(_damage_amount)
 		print(body.get_health())
 	queue_free()
-	print("DESTROYED FROM MOB")
 	
 func set_damage_amount(new_damage_amount: int) -> void:
 	_damage_amount = clamp(new_damage_amount, 1, _max_damage_amount)
@@ -22,4 +21,3 @@ func get_damage_amount() -> int:
 
 func _on_visible_on_screen_notifier_2d_screen_exited():
 	queue_free()
-	print("DESTROYED FROM OFF CAMERA")

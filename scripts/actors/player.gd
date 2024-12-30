@@ -1,25 +1,16 @@
-extends CharacterBody2D
-
+extends Mob
+class_name PlayerCharacter
 # TODO: Move walking and possibly dashing to the mob script and make
 #		the player script a CHILD of the mob script. The player is a mob
 #		technically after all
 
 signal dashing
-signal hit
 signal shooting
 signal bullet_updated
 
 var screen_size: Vector2 = Vector2.ZERO
 
-var _base_health: int = 3
-var _curr_health: int = _base_health
-
-const DEFAULT_WALK_SPEED: float = 250.0
-const MIN_WALK_SPEED: float = 50.0
-const MAX_WALK_SPEED: float = 500.0
-
-var _prev_walk_speed_modifier: float
-var _walk_speed_modifier: float = 0.0
+@export var walk_speed_modifier: float = 0.0
 
 const MIN_COOL_DOWN: float = 0.15
 const MAX_COOL_DOWN: float = 120.0
@@ -48,12 +39,14 @@ var _can_shoot_secondary: bool = true
 
 # TODO: Join these states together? Add stuff like STATE_ATTACK_MAIN_IDLE and STATE_ATTACK_SECONDARY_MOVING?
 enum MOVEMENT_STATES {STATE_IDLE, STATE_MOVING, STATE_DASHING}
-enum ATTACK_STATES {STATE_ATTACK_NONE, STATE_ATTACK_MAIN, STATE_ATTACK_SECONDARY}
+enum ATTACK_STATES {STATE_ATTACK_NONE, STATE_ATTACK_MAIN_IDLE, STATE_ATTACK_MAIN_MOVING,
+					STATE_ATTACK_SECONDARY_IDLE, STATE_ATTACK_SECONDARY_MOVING}
 
 var state_movement: MOVEMENT_STATES = MOVEMENT_STATES.STATE_IDLE
 var state_attack: ATTACK_STATES = ATTACK_STATES.STATE_ATTACK_NONE
 
 func _ready() -> void:
+	super()
 	screen_size = get_viewport_rect().size
 
 func _process(delta: float) -> void:
@@ -63,32 +56,53 @@ func _process(delta: float) -> void:
 	
 	match state_movement:
 		MOVEMENT_STATES.STATE_IDLE:
-			print("IDLE")
+			# print("IDLE")
 			_check_if_idle()
-	
+			
+			if Input.is_action_pressed("attack_main"):
+				state_attack = ATTACK_STATES.STATE_ATTACK_MAIN_IDLE
+				# Was originally is_action_just_pressed
+			if Input.is_action_pressed("attack_secondary"):
+				state_attack = ATTACK_STATES.STATE_ATTACK_SECONDARY_IDLE
+		
 		MOVEMENT_STATES.STATE_MOVING:
-			print("MOVING")
+			# print("MOVING")
 			_check_if_idle()
-			if Input.is_action_just_pressed("ui_accept") && _can_dash:
+			
+			# Was originally is_action_just_pressed
+			if Input.is_action_pressed("ui_accept"):
 				state_movement = MOVEMENT_STATES.STATE_DASHING
+			
+			if Input.is_action_pressed("attack_main") && !is_dashing:
+				state_attack = ATTACK_STATES.STATE_ATTACK_MAIN_MOVING
+			# Was originally is_action_just_pressed
+			if Input.is_action_pressed("attack_secondary") && !is_dashing:
+				state_attack = ATTACK_STATES.STATE_ATTACK_SECONDARY_MOVING
 		
 		MOVEMENT_STATES.STATE_DASHING: # Could you make a method out of this???
 			dash()
 			_check_if_idle()
-	
+		
 	match state_attack:
 		ATTACK_STATES.STATE_ATTACK_NONE:
-			if Input.is_action_pressed("attack_main") && _can_shoot_main && !is_dashing:
-				state_attack = ATTACK_STATES.STATE_ATTACK_MAIN
-			if Input.is_action_just_pressed("attack_secondary") && _can_shoot_secondary && !is_dashing:
-				state_attack = ATTACK_STATES.STATE_ATTACK_SECONDARY
+			pass
 		
-		ATTACK_STATES.STATE_ATTACK_MAIN:
+		ATTACK_STATES.STATE_ATTACK_MAIN_IDLE:
+			# print("ATTACK FROM MAIN")
+			_shoot(_bullet_main, _can_shoot_main, SHOOT_MAIN_COOL_DOWN, _shoot_main_cool_down_modifier)
+			state_attack = ATTACK_STATES.STATE_ATTACK_NONE
+			
+		ATTACK_STATES.STATE_ATTACK_MAIN_MOVING:
 			# print("ATTACK FROM MAIN")
 			_shoot(_bullet_main, _can_shoot_main, SHOOT_MAIN_COOL_DOWN, _shoot_main_cool_down_modifier)
 			state_attack = ATTACK_STATES.STATE_ATTACK_NONE
 		
-		ATTACK_STATES.STATE_ATTACK_SECONDARY:
+		ATTACK_STATES.STATE_ATTACK_SECONDARY_IDLE:
+			# print("ATTACK FROM SECONDARY")
+			_shoot(_bullet_secondary, _can_shoot_secondary, SHOOT_SECONDARY_COOL_DOWN, _shoot_secondary_cool_down_modifier)
+			state_attack = ATTACK_STATES.STATE_ATTACK_NONE
+		
+		ATTACK_STATES.STATE_ATTACK_SECONDARY_MOVING:
 			# print("ATTACK FROM SECONDARY")
 			_shoot(_bullet_secondary, _can_shoot_secondary, SHOOT_SECONDARY_COOL_DOWN, _shoot_secondary_cool_down_modifier)
 			state_attack = ATTACK_STATES.STATE_ATTACK_NONE
@@ -109,17 +123,21 @@ func set_velocity_and_rotation() -> void:
 	
 
 func dash() -> bool:
-	
 	if _can_dash && !is_dashing:
-		
 		_can_dash = false
 		is_dashing = true
+		_can_shoot_main = false
+		_can_shoot_secondary = false
 		
+		# Dashing
 		emit_signal("dashing")
 		velocity = transform.x * get_net_walk_speed() * DASH_SPEED
 		await(get_tree().create_timer(0.05).timeout)
-		# print("DASH COOLING DOWN...")
 		is_dashing = false
+		_can_shoot_main = true
+		_can_shoot_secondary = true
+		
+		# Cooldown
 		await(get_tree().create_timer(get_net_diff(DASH_COOL_DOWN, _dash_cool_down_modifier, MIN_COOL_DOWN, MAX_COOL_DOWN)).timeout)
 		# print("DASH READY!")
 		_can_dash = true
@@ -129,7 +147,7 @@ func dash() -> bool:
 		return Action_States.ACTION_FAIL
 
 func recoil(intensity: float, intensity_modifier: float) -> void:
-	velocity = -(transform.x * get_net_walk_speed() * get_net_diff(intensity, intensity_modifier, 1, MAX_RECOIL_DAMPEN)) # Last arg doesn't make sense!!!
+	velocity = -(transform.x * get_net_walk_speed() * get_net_diff(intensity, intensity_modifier, 1, MAX_RECOIL_DAMPEN))
 
 func set_bullet(bullet_in: PackedScene, bullet_new: PackedScene) -> void:
 	var prev_bullet = bullet_in
@@ -147,7 +165,7 @@ func get_net_diff(base_value: float, modifier_value: float, range_min: float, ra
 	return clamp(ret, range_min, range_max)
 
 func get_net_walk_speed() -> float:
-	return get_net_sum(DEFAULT_WALK_SPEED, _walk_speed_modifier, MIN_WALK_SPEED, MAX_WALK_SPEED)
+	return get_net_sum(walk_speed, walk_speed_modifier, MIN_WALK_SPEED, MAX_WALK_SPEED)
 
 func _shoot(bullet: PackedScene, can_shoot: bool, cool_down: float, cool_down_modifier: float) -> bool:
 	if bullet != null:

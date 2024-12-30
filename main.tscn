@@ -9,6 +9,8 @@
 [node name="Player" parent="." instance=ExtResource("1_0sv87")]
 position = Vector2(574, 306)
 _bullet_main = ExtResource("2_6c3qt")
+max_health = 10
+walk_speed = 250.0
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("2_trrww")]
 position = Vector2(746, 307)
