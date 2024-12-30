@@ -46,6 +46,7 @@ const SHOOT_SECONDARY_COOL_DOWN: float = 5.055
 var _can_shoot_secondary: bool = true
 @export var _shoot_secondary_cool_down_modifier: float = 0.0
 
+# TODO: Join these states together? Add stuff like STATE_ATTACK_MAIN_IDLE and STATE_ATTACK_SECONDARY_MOVING?
 enum MOVEMENT_STATES {STATE_IDLE, STATE_MOVING, STATE_DASHING}
 enum ATTACK_STATES {STATE_ATTACK_NONE, STATE_ATTACK_MAIN, STATE_ATTACK_SECONDARY}
 
@@ -62,17 +63,14 @@ func _process(delta: float) -> void:
 	
 	match state_movement:
 		MOVEMENT_STATES.STATE_IDLE:
-			if velocity != Vector2.ZERO:
-				state_movement = MOVEMENT_STATES.STATE_MOVING
-			# print("IDLE")
+			print("IDLE")
+			_check_if_idle()
 	
 		MOVEMENT_STATES.STATE_MOVING:
-			if velocity == Vector2.ZERO:
-				state_movement = MOVEMENT_STATES.STATE_IDLE
-			else:
-				# print("MOVING")
-				if Input.is_action_just_pressed("ui_accept") && _can_dash:
-					state_movement = MOVEMENT_STATES.STATE_DASHING
+			print("MOVING")
+			_check_if_idle()
+			if Input.is_action_just_pressed("ui_accept") && _can_dash:
+				state_movement = MOVEMENT_STATES.STATE_DASHING
 		
 		MOVEMENT_STATES.STATE_DASHING: # Could you make a method out of this???
 			dash()
@@ -177,7 +175,7 @@ func _shoot(bullet: PackedScene, can_shoot: bool, cool_down: float, cool_down_mo
 		return Action_States.ACTION_ERROR
 	
 func _check_if_idle() -> void:
-	if velocity != Vector2.ZERO:
+	if get_input_direction() != Vector2.ZERO:
 		state_movement = MOVEMENT_STATES.STATE_MOVING
 	else:
 		state_movement = MOVEMENT_STATES.STATE_IDLE
