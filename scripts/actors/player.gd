@@ -129,7 +129,7 @@ func dash() -> bool:
 		return Action_States.ACTION_FAIL
 
 func recoil(intensity: float, intensity_modifier: float) -> void:
-	velocity = -(transform.x * get_net_walk_speed() * get_net_diff(intensity, intensity_modifier, 1, MAX_RECOIL_DAMPEN))
+	velocity = -(transform.x * get_net_walk_speed() * get_net_diff(intensity, intensity_modifier, 1, MAX_RECOIL_DAMPEN)) # Last arg doesn't make sense!!!
 
 func set_bullet(bullet_in: PackedScene, bullet_new: PackedScene) -> void:
 	var prev_bullet = bullet_in
