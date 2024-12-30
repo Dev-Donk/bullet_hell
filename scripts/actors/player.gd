@@ -37,7 +37,7 @@ const SHOOT_SECONDARY_COOL_DOWN: float = 5.055
 var _can_shoot_secondary: bool = true
 @export var _shoot_secondary_cool_down_modifier: float = 0.0
 
-# TODO: Join these states together? Add stuff like STATE_ATTACK_MAIN_IDLE and STATE_ATTACK_SECONDARY_MOVING?
+# TODO: Make a Read-Only script where character scripts can pull states from
 enum MOVEMENT_STATES {STATE_IDLE, STATE_MOVING, STATE_DASHING}
 enum ATTACK_STATES {STATE_ATTACK_NONE, STATE_ATTACK_MAIN_IDLE, STATE_ATTACK_MAIN_MOVING,
 					STATE_ATTACK_SECONDARY_IDLE, STATE_ATTACK_SECONDARY_MOVING}
